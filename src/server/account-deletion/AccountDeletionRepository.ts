@@ -23,6 +23,8 @@ import {
   audits,
   ga4Connections,
   gscConnections,
+  umamiConnections,
+  umamiInstances,
   invitation,
   localRankChecks,
   member,
@@ -344,6 +346,15 @@ async function eraseUser(input: {
     tx
       .delete(ga4Connections)
       .where(eq(ga4Connections.connectedByUserId, userId)),
+    // An Umami login holds the credentials its saver last entered, so it goes
+    // with them. Connections they made on someone else's login go too;
+    // deleting the login cascades the projects that read through it.
+    tx
+      .delete(umamiConnections)
+      .where(eq(umamiConnections.connectedByUserId, userId)),
+    tx
+      .delete(umamiInstances)
+      .where(eq(umamiInstances.savedByUserId, userId)),
     tx.delete(apikey).where(eq(apikey.referenceId, userId)),
     tx
       .update(audits)

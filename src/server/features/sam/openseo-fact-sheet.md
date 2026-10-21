@@ -37,7 +37,7 @@ Every paid plan includes:
 - Keyword research, backlinks, rank tracking, and site audits.
 - AI visibility, prompt research, model comparisons, and prompt tracking.
 - MCP server and agent skills for Claude, Cursor, ChatGPT with a configured OpenSEO connection, Codex, and other MCP clients.
-- Google Search Console integration that does not use credits.
+- Google Search Console, Google Analytics, and Umami integrations that do not use credits.
 - A 30-day money-back guarantee for the first charge.
 
 Customers choose a plan when they subscribe. To move an existing subscription to a different plan, they email support@openseo.so.
