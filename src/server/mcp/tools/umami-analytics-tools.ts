@@ -107,10 +107,13 @@ function rangeNote(result: {
     : "";
 }
 
-function channelNote(channel: string) {
-  return channel === "organic_search"
-    ? " Filtered to visits referred by a search engine; pass channel=all for every visit."
-    : "";
+// Totals use Umami's own Organic search channel; per-row reports and the
+// trend can only filter on the visit's referrer, so the two can differ.
+function channelNote(channel: string, scope: "overview" | "rows") {
+  if (channel !== "organic_search") return "";
+  return scope === "overview"
+    ? " Totals are Umami's Organic search channel; the trend counts visitors referred by a search engine. Pass channel=all for every visit."
+    : " Filtered to visits referred by a search engine; pass channel=all for every visit.";
 }
 
 function reportText(label: string, result: UmamiReportResult) {
@@ -118,7 +121,7 @@ function reportText(label: string, result: UmamiReportResult) {
   const paginate = result.pageInfo.hasMore
     ? " More rows are available; call again with offset to page through them."
     : "";
-  const summary = `${label} (Umami: ${result.source.websiteName}): ${result.rowCount} rows for ${range.startDate} through ${range.endDate}.${rangeNote(result)}${channelNote(result.request.channel)}${paginate}`;
+  const summary = `${label} (Umami: ${result.source.websiteName}): ${result.rowCount} rows for ${range.startDate} through ${range.endDate}.${rangeNote(result)}${channelNote(result.request.channel, "rows")}${paginate}`;
   if (result.rows.length === 0) return summary;
   const columns = [...result.request.dimensions, ...result.request.metrics].map(
     (key) => ({
@@ -132,7 +135,7 @@ function reportText(label: string, result: UmamiReportResult) {
 function overviewText(result: UmamiOverviewResult) {
   const range = result.request.resolvedDateRange;
   const previous = result.request.previousDateRange;
-  const summary = `Umami overview for ${result.source.websiteName}, ${range.startDate} through ${range.endDate}, compared with ${previous.startDate} through ${previous.endDate}.${rangeNote(result)}${channelNote(result.request.channel)}`;
+  const summary = `Umami overview for ${result.source.websiteName}, ${range.startDate} through ${range.endDate}, compared with ${previous.startDate} through ${previous.endDate}.${rangeNote(result)}${channelNote(result.request.channel, "overview")}`;
   // bounceRate is a 0-1 ratio; the counts render as-is.
   const cell = (metric: string, value: number | null) =>
     metric === "bounceRate" && value !== null ? percentCell(value) : value;
@@ -275,7 +278,7 @@ export const getUmamiTrafficSourcesTool = {
   name: "get_umami_traffic_sources",
   config: {
     title: "Get Umami traffic sources",
-    description: `Compare where visits come from on the project's connected Umami website, by referring domain or by channel, with visits, visitors, and pageviews. The referrer breakdown can be limited to search engines; the channel breakdown always covers every visit. ${SCOPE_NOTE}`,
+    description: `Compare where visits come from on the project's connected Umami website, by referring domain (visits and visitors) or by channel (visits, visitors, and pageviews). The referrer breakdown can be limited to search engines; the channel breakdown always covers every visit. ${SCOPE_NOTE}`,
     inputSchema: trafficSourcesInputSchema,
     outputSchema: reportOutputSchema,
     annotations,

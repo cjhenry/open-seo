@@ -62,8 +62,9 @@ Organic totals are Umami's own **Organic search** channel, so they match the
 Umami dashboard. Entry pages, referrers and the trend use the visit's referrer
 instead: a visit counts as organic when it arrived from Google, Bing,
 DuckDuckGo, Ecosia, Yandex, Baidu, Yahoo, Qwant, Startpage, Brave, Naver,
-Seznam or MSN. The two can differ slightly, for example for links tagged
-`utm_medium=organic`. The MCP tools take `channel: "all"` to include every
+Seznam or MSN. The two can differ: Umami's channel also counts links tagged
+`utm_medium=organic` and any `google.` subdomain, such as Google News, and
+leaves out Yahoo, Naver, Seznam, Qwant and Startpage. The MCP tools take `channel: "all"` to include every
 visit, and the chat uses the same tools. The trend is daily, or monthly for
 ranges over 180 days.
 
