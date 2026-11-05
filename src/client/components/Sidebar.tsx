@@ -20,6 +20,7 @@ import { clearLastProjectId } from "@/client/lib/active-project";
 import {
   connectNavGroup,
   getProjectNavGroups,
+  whatsLiveNavGroup,
 } from "@/client/navigation/items";
 import { ProjectSwitcher } from "@/client/features/projects/ProjectSwitcher";
 import {
@@ -137,7 +138,7 @@ export function Sidebar({
   const navGroups =
     projectId !== null || navPlaceholder
       ? getProjectNavGroups(projectId ?? "")
-      : [connectNavGroup];
+      : [whatsLiveNavGroup, connectNavGroup];
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
   // SAM is hidden from navigation: the chat route is only reachable by URL,

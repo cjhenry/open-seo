@@ -8,7 +8,12 @@ import {
 } from "@/shared/audit-issues";
 import type { AuditResultsData } from "@/client/features/audit/results/types";
 import { SeverityBadge } from "@/client/features/audit/shared";
+import { CopyAuditFixPrompt } from "@/client/features/audit/CopyAuditFixPrompt";
 import { EmptyState } from "@/client/components/EmptyState";
+import {
+  auditFixFilename,
+  siteAuditFixPrompt,
+} from "@/shared/audit-fix-prompt";
 
 type AuditIssueRow = AuditResultsData["issues"][number];
 
@@ -151,24 +156,30 @@ function IssueRow({ group }: { group: IssueGroup }) {
           : "border-l-2 border-l-transparent"
       }
     >
-      <button
-        type="button"
-        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/50 transition-colors"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-      >
-        <span className="text-sm font-medium flex-1 min-w-0 truncate">
-          {group.title}
-        </span>
-        <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-          {group.issues.length} {group.issues.length === 1 ? "page" : "pages"}
-        </span>
-        <ChevronRight
-          className={`size-4 shrink-0 text-muted-foreground transition-transform ${
-            open ? "rotate-90" : ""
-          }`}
+      <div className="flex items-center gap-2 px-4 py-2.5 hover:bg-muted/50">
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+        >
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+            {group.title}
+          </span>
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            {group.issues.length} {group.issues.length === 1 ? "page" : "pages"}
+          </span>
+          <ChevronRight
+            className={`size-4 shrink-0 text-muted-foreground transition-transform ${
+              open ? "rotate-90" : ""
+            }`}
+          />
+        </button>
+        <CopyAuditFixPrompt
+          prompt={groupPrompt(group)}
+          filename={auditFixFilename(group.issueType)}
         />
-      </button>
+      </div>
 
       {open && (
         <div className="pl-4 pr-4 pb-4 pt-0.5 space-y-3">
@@ -183,34 +194,61 @@ function IssueRow({ group }: { group: IssueGroup }) {
               <span className="text-foreground/80">{group.howToFix}</span>
             </p>
           )}
-          <AffectedUrlList issues={group.issues} />
+          <AffectedUrlList group={group} />
         </div>
       )}
     </div>
   );
 }
 
-function AffectedUrlList({ issues }: { issues: AuditIssueRow[] }) {
-  const rendered = issues.slice(0, MAX_RENDERED_URLS);
-  const remaining = issues.length - rendered.length;
+function groupPrompt(group: IssueGroup): string {
+  return siteAuditFixPrompt({
+    title: group.title,
+    issueType: group.issueType,
+    severity: group.severity,
+    explanation: group.explanation,
+    howToFix: group.howToFix,
+    pages: group.issues.map((issue) => ({
+      url: issue.pageUrl,
+      detailsJson: issue.detailsJson,
+    })),
+  });
+}
+
+function AffectedUrlList({ group }: { group: IssueGroup }) {
+  const rendered = group.issues.slice(0, MAX_RENDERED_URLS);
+  const remaining = group.issues.length - rendered.length;
 
   return (
     <div className="max-h-[320px] overflow-y-auto rounded border border-border bg-card">
       {rendered.map((issue) => (
         <div
           key={issue.id}
-          className="px-3 py-1.5 text-sm flex flex-col gap-0.5 border-b border-border last:border-b-0"
+          className="flex items-start justify-between gap-2 border-b border-border px-3 py-1.5 text-sm last:border-b-0"
         >
-          <a
-            className="text-foreground/80 truncate hover:underline"
-            href={issue.pageUrl}
-            target="_blank"
-            rel="noreferrer"
-            title={issue.pageUrl}
-          >
-            {issue.pageUrl}
-          </a>
-          <IssueDetails detailsJson={issue.detailsJson} />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <a
+              className="truncate text-foreground/80 hover:underline"
+              href={issue.pageUrl}
+              target="_blank"
+              rel="noreferrer"
+              title={issue.pageUrl}
+            >
+              {issue.pageUrl}
+            </a>
+            <IssueDetails detailsJson={issue.detailsJson} />
+          </div>
+          <CopyAuditFixPrompt
+            prompt={siteAuditFixPrompt({
+              title: group.title,
+              issueType: group.issueType,
+              severity: group.severity,
+              explanation: group.explanation,
+              howToFix: group.howToFix,
+              pages: [{ url: issue.pageUrl, detailsJson: issue.detailsJson }],
+            })}
+            filename={auditFixFilename(group.issueType, issue.pageUrl)}
+          />
         </div>
       ))}
       {remaining > 0 && (

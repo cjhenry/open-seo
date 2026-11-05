@@ -141,6 +141,7 @@ export function LighthouseIssuesScreen({
             issues={visibleIssues}
             isLoading={issuesQuery.isLoading}
             emptyMessage={emptyMessage}
+            pageUrl={issuesQuery.data?.finalUrl ?? ""}
           />
         </TableCard>
       </div>

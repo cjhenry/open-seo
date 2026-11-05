@@ -2,6 +2,7 @@ import {
   Bookmark,
   Bot,
   Brain,
+  CalendarDays,
   ChartLine,
   ClipboardCheck,
   FileText,
@@ -101,6 +102,17 @@ const aiNavItem = linkOptions({
   icon: Bot,
 });
 
+const whatsLiveNavItem = linkOptions({
+  to: "/whats-live" as const,
+  label: "What's live",
+  icon: CalendarDays,
+});
+
+export const whatsLiveNavGroup = {
+  label: "Social",
+  items: [whatsLiveNavItem],
+};
+
 // Shown only when no project is selected; with a project, Agent setup lives in
 // the "AI Tools" group below.
 export const connectNavGroup = {
@@ -128,7 +140,7 @@ export function getProjectNavGroups(projectId: string) {
   return [
     {
       label: "Overview",
-      items: [byPath("/p/$projectId")],
+      items: [byPath("/p/$projectId"), whatsLiveNavItem],
     },
     {
       label: "Research",

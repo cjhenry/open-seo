@@ -1,10 +1,21 @@
 import { useState, type ReactNode } from "react";
 import { ChevronRight, ExternalLink } from "lucide-react";
 import { TableCell, TableRow } from "@/client/components/ui/table";
+import { CopyAuditFixPrompt } from "@/client/features/audit/CopyAuditFixPrompt";
 import { SeverityBadge } from "@/client/features/audit/shared";
+import {
+  auditFixFilename,
+  lighthouseFixPrompt,
+} from "@/shared/audit-fix-prompt";
 import type { LighthouseIssue } from "./types";
 
-export function LighthouseIssueRow({ issue }: { issue: LighthouseIssue }) {
+export function LighthouseIssueRow({
+  issue,
+  pageUrl,
+}: {
+  issue: LighthouseIssue;
+  pageUrl: string;
+}) {
   const [open, setOpen] = useState(false);
   const hasDetails = !!(issue.description || issue.items.length > 0);
 
@@ -27,13 +38,31 @@ export function LighthouseIssueRow({ issue }: { issue: LighthouseIssue }) {
           </SeverityBadge>
         </TableCell>
         <TableCell className="py-3">
-          <div>
-            <p className="font-medium text-sm leading-snug">{issue.title}</p>
-            {issue.displayValue ? (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {issue.displayValue}
-              </p>
-            ) : null}
+          <div className="space-y-2">
+            <div>
+              <p className="font-medium text-sm leading-snug">{issue.title}</p>
+              {issue.displayValue ? (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {issue.displayValue}
+                </p>
+              ) : null}
+            </div>
+            <CopyAuditFixPrompt
+              prompt={lighthouseFixPrompt({
+                pageUrl,
+                title: issue.title,
+                description: issue.description,
+                severity: issue.severity,
+                category: issue.category,
+                auditKey: issue.auditKey,
+                displayValue: issue.displayValue,
+                score: issue.score,
+                impactMs: issue.impactMs,
+                impactBytes: issue.impactBytes,
+                items: issue.items,
+              })}
+              filename={auditFixFilename(issue.auditKey, pageUrl)}
+            />
           </div>
         </TableCell>
         <TableCell className="py-3 hidden sm:table-cell">

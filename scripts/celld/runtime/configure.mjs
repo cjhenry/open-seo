@@ -57,6 +57,9 @@ const allowed = [
   "GOOGLE_CLIENT_SECRET",
   "GOOGLE_MAPS_API_KEY",
   "CRAWLER_ACCESS_SECRET",
+  "POSTIZ_API_URL",
+  "POSTIZ_WORK_API_KEY",
+  "POSTIZ_USE_FIXTURES",
 ];
 config.vars = {
   ...secrets,
