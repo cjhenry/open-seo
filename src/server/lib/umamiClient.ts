@@ -1,3 +1,4 @@
+import { sort } from "remeda";
 import { z } from "zod";
 import { normalizeAndValidateStartUrl } from "@/server/lib/audit/url-policy";
 import { AppError } from "@/server/lib/errors";
@@ -72,6 +73,69 @@ const expandedMetricsSchema = z.array(
   }),
 );
 type UmamiExpandedMetric = z.infer<typeof expandedMetricsSchema>[number];
+
+// Umami 3.0.3 filters a referrer with contains (`c.`), not regex (`re.`,
+// added in 3.1). A `re.` value is the organic marker: one contains query per
+// search engine, summed. `google.` also matches news.google.com. Totals still
+// come from the organicSearch channel.
+const ORGANIC_REFERRER_CONTAINS = [
+  "google.",
+  "bing.com",
+  "duckduckgo.com",
+  "ecosia.org",
+  "yandex.",
+  "baidu.com",
+  "yahoo.com",
+  "qwant.com",
+  "startpage.com",
+  "brave.com",
+  "naver.com",
+  "seznam.cz",
+  "msn.com",
+  "ya.ru",
+] as const;
+
+const isOrganicReferrerFilter = (referrer?: string) =>
+  referrer?.startsWith("re.") === true;
+
+type UmamiSeries = z.infer<typeof pageviewSeriesSchema>;
+
+function mergePoints(
+  series: UmamiSeries["pageviews"][],
+): UmamiSeries["pageviews"] {
+  const totals = new Map<string, number>();
+  for (const points of series) {
+    for (const point of points) {
+      totals.set(point.x, (totals.get(point.x) ?? 0) + point.y);
+    }
+  }
+  return sort([...totals.entries()], ([left], [right]) =>
+    left.localeCompare(right),
+  ).map(([x, y]) => ({ x, y }));
+}
+
+function mergeMetrics(parts: UmamiExpandedMetric[][]): UmamiExpandedMetric[] {
+  const totals = new Map<string, UmamiExpandedMetric>();
+  for (const rows of parts) {
+    for (const row of rows) {
+      const current = totals.get(row.name);
+      if (!current) {
+        totals.set(row.name, { ...row });
+        continue;
+      }
+      current.pageviews += row.pageviews;
+      current.visitors += row.visitors;
+      current.visits += row.visits;
+      current.bounces += row.bounces;
+      current.totaltime += row.totaltime;
+    }
+  }
+  return sort(
+    [...totals.values()],
+    (left, right) =>
+      right.visits - left.visits || left.name.localeCompare(right.name),
+  );
+}
 
 function statusError(status: number): UmamiError {
   if (status === 401 || status === 403) {
@@ -245,6 +309,14 @@ export function createUmamiClient(credentials: UmamiCredentials) {
 
   function authHeaders(): Promise<Record<string, string>> {
     if (credentials.authType === "api_key") {
+      // Self-hosted API keys (Umami 3.4+) are bearer tokens prefixed umami_.
+      // Umami 3.0.3 has no API keys, so that version connects with a username
+      // and password. Cloud keys are not bearer tokens and use this header.
+      if (credentials.secret.startsWith("umami_")) {
+        return Promise.resolve({
+          authorization: `Bearer ${credentials.secret}`,
+        });
+      }
       return Promise.resolve({ "x-umami-api-key": credentials.secret });
     }
     authPromise ??= login();
@@ -309,17 +381,28 @@ export function createUmamiClient(credentials: UmamiCredentials) {
       range: UmamiTimeRange,
       input: { unit: "day" | "month"; timeZone: string; referrer?: string },
     ) {
-      return parse(
-        pageviewSeriesSchema,
-        await send(
-          `${websitePath(websiteId)}/pageviews?${query(range, {
-            unit: input.unit,
-            timezone: input.timeZone,
-            referrer: input.referrer,
-          })}`,
-          { auth: true },
-        ),
+      const fetchSeries = async (referrer: string | undefined) =>
+        parse(
+          pageviewSeriesSchema,
+          await send(
+            `${websitePath(websiteId)}/pageviews?${query(range, {
+              unit: input.unit,
+              timezone: input.timeZone,
+              referrer,
+            })}`,
+            { auth: true },
+          ),
+        );
+      if (!isOrganicReferrerFilter(input.referrer)) {
+        return fetchSeries(input.referrer);
+      }
+      const parts = await Promise.all(
+        ORGANIC_REFERRER_CONTAINS.map((domain) => fetchSeries(`c.${domain}`)),
       );
+      return {
+        pageviews: mergePoints(parts.map((part) => part.pageviews)),
+        sessions: mergePoints(parts.map((part) => part.sessions)),
+      };
     },
 
     async getExpandedMetrics(
@@ -332,12 +415,37 @@ export function createUmamiClient(credentials: UmamiCredentials) {
         referrer?: string;
       },
     ): Promise<UmamiExpandedMetric[]> {
-      return parse(
-        expandedMetricsSchema,
-        await send(
-          `${websitePath(websiteId)}/metrics/expanded?${query(range, input)}`,
-          { auth: true },
+      const fetchMetrics = async (
+        referrer: string | undefined,
+        paging: { limit: number; offset: number },
+      ) =>
+        parse(
+          expandedMetricsSchema,
+          await send(
+            `${websitePath(websiteId)}/metrics/expanded?${query(range, {
+              type: input.type,
+              limit: paging.limit,
+              offset: paging.offset,
+              referrer,
+            })}`,
+            { auth: true },
+          ),
+        );
+      if (!isOrganicReferrerFilter(input.referrer)) {
+        return fetchMetrics(input.referrer, input);
+      }
+      // Each engine is its own query. Take enough rows to cover the requested
+      // window, then merge and slice. A page that is past this window on every
+      // engine is omitted.
+      const window = input.offset + input.limit;
+      const parts = await Promise.all(
+        ORGANIC_REFERRER_CONTAINS.map((domain) =>
+          fetchMetrics(`c.${domain}`, { limit: window, offset: 0 }),
         ),
+      );
+      return mergeMetrics(parts).slice(
+        input.offset,
+        input.offset + input.limit,
       );
     },
   };

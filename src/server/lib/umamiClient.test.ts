@@ -135,6 +135,78 @@ describe("umamiClient", () => {
     expect(mocks.fetch).not.toHaveBeenCalled();
   });
 
+  it("sends a self-hosted API key as a bearer token", async () => {
+    mocks.fetch.mockResolvedValue(Response.json({ data: [] }));
+    const client = createUmamiClient({
+      baseUrl: "https://stats.example.com",
+      authType: "api_key",
+      username: null,
+      secret: "umami_abc123",
+      headers: [],
+    });
+
+    await client.listWebsites();
+
+    const [call] = mocks.fetch.mock.calls;
+    expect(requestUrl(call[0])).toMatch(
+      /^https:\/\/stats\.example\.com\/api\/websites\?/,
+    );
+    expect(headersOf(call).get("authorization")).toBe("Bearer umami_abc123");
+    expect(headersOf(call).get("x-umami-api-key")).toBeNull();
+  });
+
+  it("sums an organic referrer filter across search-engine contains queries", async () => {
+    mocks.fetch.mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.endsWith("/auth/login")) return Response.json({ token: "jwt-1" });
+      const referrer = new URL(url).searchParams.get("referrer");
+      const visits =
+        referrer === "c.google." ? 3 : referrer === "c.bing.com" ? 1 : 0;
+      if (url.includes("/pageviews?")) {
+        return Response.json({
+          pageviews: [{ x: "2026-01-01", y: visits }],
+          sessions: [{ x: "2026-01-01", y: visits }],
+        });
+      }
+      return Response.json([
+        {
+          name: referrer === "c.bing.com" ? "/from-bing" : "/from-google",
+          pageviews: visits,
+          visitors: visits,
+          visits,
+          bounces: 0,
+          totaltime: 0,
+        },
+      ]);
+    });
+
+    const client = createUmamiClient(passwordLogin);
+    const series = await client.getSeries("w1", range, {
+      unit: "day",
+      timeZone: "UTC",
+      referrer: "re.organic",
+    });
+    expect(series.sessions).toEqual([{ x: "2026-01-01", y: 4 }]);
+
+    const metrics = await client.getExpandedMetrics("w1", range, {
+      type: "entry",
+      limit: 10,
+      offset: 0,
+      referrer: "re.organic",
+    });
+    expect(metrics.map((row) => [row.name, row.visits])).toEqual([
+      ["/from-google", 3],
+      ["/from-bing", 1],
+    ]);
+
+    const referrers = mocks.fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)).searchParams.get("referrer"))
+      .filter((referrer): referrer is string => referrer !== null);
+    expect(referrers).toContain("c.google.");
+    expect(referrers).toContain("c.bing.com");
+    expect(referrers.every((referrer) => referrer.startsWith("c."))).toBe(true);
+  });
+
   it("rejects Umami v2 stats instead of reading them as zeros", async () => {
     mocks.fetch.mockImplementation(async (input) =>
       requestUrl(input).endsWith("/auth/login")

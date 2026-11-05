@@ -7,12 +7,13 @@ connection is read-only.
 
 ## What you'll need
 
-- Umami v3 or newer. OpenSEO filters visits by search-engine referrer with
-  Umami's regex filter, which v2 doesn't have; a v2 server is rejected when you
-  pick a website.
+- Umami v3 or newer. v3.0.3 is the oldest self-hosted release this
+  connects to. A v2 server is rejected when you pick a website, because its
+  stats response has a different shape.
 - For a self-hosted server: a username and password. A view-only Umami user is
   enough, and a dedicated one is the safer choice. Users with two-factor
-  sign-in can't be used.
+  sign-in can't be used. Umami 3.0.3 has no API keys; a self-hosted API key
+  (it starts with `umami_`) needs Umami 3.4 or newer.
 - For Umami Cloud: an API key from **Settings → API keys** in Umami Cloud.
 - On a self-hosted OpenSEO deployment: `BETTER_AUTH_SECRET` set to at least 32
   characters. It encrypts the Umami password or API key and any custom headers.
@@ -24,8 +25,8 @@ connection is read-only.
 2. Enter the Umami URL, the address you open Umami at, for example
    `https://analytics.example.com`. For Umami Cloud, enter
    `https://cloud.umami.is`.
-3. Choose **Username and password (self-hosted)** or **API key (Umami Cloud)**
-   and fill in the credentials.
+3. Choose **Username and password** or **API key** and fill in the
+   credentials. On Umami 3.0.3, use a username and password.
 4. If an auth proxy sits in front of Umami, add its headers under **Custom
    request headers**, one `Name: value` per line. For a Cloudflare Access
    service token:
@@ -60,13 +61,15 @@ To change it, pick the website again from a browser in the other time zone.
 
 Organic totals are Umami's own **Organic search** channel, so they match the
 Umami dashboard. Entry pages, referrers and the trend use the visit's referrer
-instead: a visit counts as organic when it arrived from Google, Bing,
+instead. Umami 3.0.3 can match a referrer with "contains" but not with a
+regex, so a visit counts as organic when its referrer contains Google, Bing,
 DuckDuckGo, Ecosia, Yandex, Baidu, Yahoo, Qwant, Startpage, Brave, Naver,
-Seznam or MSN. The two can differ: Umami's channel also counts links tagged
-`utm_medium=organic` and any `google.` subdomain, such as Google News, and
-leaves out Yahoo, Naver, Seznam, Qwant and Startpage. The MCP tools take `channel: "all"` to include every
-visit, and the chat uses the same tools. The trend is daily, or monthly for
-ranges over 180 days.
+Seznam, MSN or ya.ru. That includes subdomains such as Google News. The two
+definitions can differ: Umami's channel also counts links tagged
+`utm_medium=organic`, and it leaves out Yahoo, Naver, Seznam, Qwant and
+Startpage. The MCP tools take `channel: "all"` to include every visit, and the
+chat uses the same tools. The trend is daily, or monthly for ranges over 180
+days.
 
 ## Troubleshooting
 

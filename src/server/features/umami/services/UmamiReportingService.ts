@@ -23,17 +23,14 @@ type DateRange = { startDate: string; endDate: string };
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 1_000;
 
-// Umami's referrer filter accepts a `re.` regex (Umami v3+), run as a
-// case-insensitive Postgres or ClickHouse (RE2) match, so no lookaheads. The
-// filter is event-level: it matches only the entry pageview of a search visit,
-// which carries the external referrer. That is right for counting visits and
-// visitors per entry page or referrer, and wrong for anything that needs the
-// rest of the visit (pageviews, bounces, time), so those come from Umami's own
-// per-visit channel report instead. Subdomain labels are limited to www, m,
-// search and two-letter regions, so gemini.google.com or news.google.com
-// don't count as search.
-const ORGANIC_REFERRER_FILTER =
-  "re.^((www|m|[a-z]{2})\\.)?(([a-z]{2}\\.)?search\\.)?(google|bing|duckduckgo|ecosia|yandex|baidu|yahoo|qwant|startpage|brave|naver|seznam|msn)\\.|^ya\\.ru$|^com\\.google\\.android\\.googlequicksearchbox";
+// Marker for the Umami client's organic referrer expansion. Umami 3.0.3 can
+// filter a referrer with contains, not regex, so the client turns this into
+// one contains query per search engine and sums them. The filter is
+// event-level: only the entry pageview of a search visit carries the external
+// referrer. That counts visits and visitors per entry page or referrer, and
+// not the rest of the visit, so pageviews, bounces and time come from Umami's
+// per-visit organicSearch channel instead.
+const ORGANIC_REFERRER_FILTER = "re.organic";
 
 // Umami's name for search-engine visits in its channel report.
 const ORGANIC_CHANNEL = "organicSearch";

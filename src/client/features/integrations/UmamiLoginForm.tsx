@@ -63,8 +63,8 @@ const loginSchema = z
   );
 
 const AUTH_TYPES = [
-  { value: "password", label: "Username and password (self-hosted)" },
-  { value: "api_key", label: "API key (Umami Cloud)" },
+  { value: "password", label: "Username and password" },
+  { value: "api_key", label: "API key" },
 ] as const;
 
 /**
@@ -164,6 +164,11 @@ export function UmamiLoginForm({
               {(field) => (
                 <field.TextField
                   label={authType === "password" ? "Password" : "API key"}
+                  description={
+                    authType === "password"
+                      ? undefined
+                      : "A self-hosted key starts with umami_ and needs Umami 3.4 or newer. Umami 3.0.3 uses a username and password."
+                  }
                   type="password"
                   autoComplete="off"
                   data-ph-mask

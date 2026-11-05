@@ -352,9 +352,7 @@ async function eraseUser(input: {
     tx
       .delete(umamiConnections)
       .where(eq(umamiConnections.connectedByUserId, userId)),
-    tx
-      .delete(umamiInstances)
-      .where(eq(umamiInstances.savedByUserId, userId)),
+    tx.delete(umamiInstances).where(eq(umamiInstances.savedByUserId, userId)),
     tx.delete(apikey).where(eq(apikey.referenceId, userId)),
     tx
       .update(audits)

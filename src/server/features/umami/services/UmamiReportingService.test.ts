@@ -108,34 +108,18 @@ describe("UmamiReportingService", () => {
     });
   });
 
-  it("limits organic entry pages to search-engine referrers", async () => {
+  it("limits the organic trend and entry pages to a search-engine referrer filter", async () => {
     await UmamiReportingService.getOverview({ projectId: "p1" });
+    expect(mocks.getSeries.mock.calls[0][2].referrer).toBe("re.organic");
 
-    const filter = mocks.getSeries.mock.calls[0][2].referrer;
-    if (typeof filter !== "string") throw new Error("expected a filter");
-    expect(filter.startsWith("re.")).toBe(true);
-    // Umami runs it as a case-insensitive Postgres or RE2 regex.
-    const search = new RegExp(filter.slice(3), "i");
-    for (const domain of [
-      "google.com",
-      "www.google.co.th",
-      "cn.bing.com",
-      "uk.search.yahoo.com",
-      "search.brave.com",
-      "duckduckgo.com",
-      "com.google.android.googlequicksearchbox",
-    ]) {
-      expect(search.test(domain), domain).toBe(true);
-    }
-    for (const domain of [
-      "gemini.google.com",
-      "news.google.com",
-      "mail.google.com",
-      "chatgpt.com",
-      "example.com",
-    ]) {
-      expect(search.test(domain), domain).toBe(false);
-    }
+    await UmamiReportingService.runReport({
+      projectId: "p1",
+      kind: "landing_pages",
+    });
+    expect(mocks.getExpandedMetrics.mock.calls.at(-1)?.[2]).toMatchObject({
+      type: "entry",
+      referrer: "re.organic",
+    });
   });
 
   it("asks for a monthly trend once Umami would stop answering daily", async () => {

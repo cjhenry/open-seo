@@ -121,6 +121,8 @@ describe("account erasure", () => {
 
   it("removes Umami logins the user saved, even in a workspace they share", async () => {
     state.database?.exec(`
+      INSERT INTO projects (id, organization_id, name) VALUES
+        ('p-shared-2', 'org-shared', 'Other');
       INSERT INTO umami_instances (id, organization_id, base_url, auth_type, encrypted_secret, saved_by_user_id) VALUES
         ('inst-alice', 'org-shared', 'https://stats.example.com', 'password', 'enc', 'alice'),
         ('inst-bob', 'org-shared', 'https://stats.example.com', 'password', 'enc', 'bob');
@@ -128,7 +130,7 @@ describe("account erasure", () => {
         id, project_id, organization_id, instance_id, website_id, website_name, time_zone, connected_by_user_id
       ) VALUES
         ('conn-through-alice', 'p-shared', 'org-shared', 'inst-alice', 'site-1', 'Site', 'UTC', 'bob'),
-        ('conn-alice-on-bob', 'p-shared', 'org-shared', 'inst-bob', 'site-2', 'Site', 'UTC', 'alice');
+        ('conn-alice-on-bob', 'p-shared-2', 'org-shared', 'inst-bob', 'site-2', 'Site', 'UTC', 'alice');
     `);
 
     await AccountDeletionRepository.eraseUser({

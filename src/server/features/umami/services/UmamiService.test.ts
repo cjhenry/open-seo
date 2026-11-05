@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type Client } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
@@ -55,8 +55,12 @@ beforeAll(async () => {
     CREATE TABLE organization (id TEXT PRIMARY KEY);
     CREATE TABLE projects (id TEXT PRIMARY KEY);
   `);
+  const migrationFile = readdirSync(join(process.cwd(), "drizzle/sqlite")).find(
+    (name) => name.endsWith("_umami_connections.sql"),
+  );
+  if (!migrationFile) throw new Error("Umami migration missing");
   const migration = readFileSync(
-    join(process.cwd(), "drizzle/sqlite/0060_umami_connections.sql"),
+    join(process.cwd(), "drizzle/sqlite", migrationFile),
     "utf8",
   );
   await client.executeMultiple(

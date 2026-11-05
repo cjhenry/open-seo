@@ -36,15 +36,20 @@ millisecond timestamps with daylight saving accounted for.
 Umami has no filter for "came from a search engine", so organic traffic is
 read two ways. Totals (visits, visitors, pageviews, bounces, visit time) come
 from Umami's per-visit channel report, taking its `organicSearch` row, so they
-match the Umami dashboard. Entry pages, referrers and the trend use Umami's
-referrer regex filter, anchored to search-engine domains so that subdomains
-such as `gemini.google.com` or `news.google.com` don't count. That filter is
+match the Umami dashboard. Entry pages, referrers and the trend use a referrer
+filter. Self-hosted Umami 3.0.3 can match a referrer with contains, not with
+the regex operator added in 3.1, so each report asks once per search engine
+(`google.`, `bing.com`, and the others) and sums the rows. A contains match on
+`google.` also counts subdomains such as `news.google.com`. The filter is
 event-level and only the entry pageview of a search visit carries the external
 referrer, so it counts visits and visitors correctly but not the rest of a
 visit; filtered reports leave pageviews out, and pageviews per path are read
-across all traffic. Umami v2 has no regex filter and reports totals in a
-different shape, so a v2 server is rejected when a website is picked rather
-than reporting zeros.
+across all traffic. Umami v2 reports totals in a different shape, so a v2
+server is rejected when a website is picked rather than reporting zeros.
+
+A self-hosted Umami 3.0.3 server connects with a username and password. API
+keys were added in Umami 3.4; a key prefixed `umami_` is sent as a bearer
+token. Other API keys, including Umami Cloud, are sent as `x-umami-api-key`.
 
 Umami switches a daily series to months once a range spans more than seven
 calendar months, so ranges over 180 days ask for a monthly trend and say so.
