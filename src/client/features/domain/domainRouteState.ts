@@ -5,6 +5,7 @@ import {
 import {
   DEFAULT_LOCATION_CODE,
   isLabsLocationCode,
+  isSupportedLocationCode,
 } from "@/client/features/keywords/locations";
 import type { ProjectMarket } from "@/client/features/projects/types";
 import {
@@ -72,13 +73,13 @@ export function getDomainRouteState(
   projectMarket?: ProjectMarket,
 ): DomainOverviewRouteState {
   const normalizedSort = toSortMode(search.sort ?? null) ?? "traffic";
+  // Keep the project's real market in the picker, including Google-Ads-only
+  // countries such as the Cayman Islands. Domain analytics still only queries
+  // Labs; non-Labs selections are shown and labeled, not silently swapped to US.
   const defaultLocationCode =
-    projectMarket && isLabsLocationCode(projectMarket.locationCode)
-      ? projectMarket.locationCode
-      : DEFAULT_LOCATION_CODE;
-  // Domain analytics is Labs-backed; Google-Ads-only countries aren't valid.
+    projectMarket?.locationCode ?? DEFAULT_LOCATION_CODE;
   const normalizedLocationCode =
-    search.loc != null && isLabsLocationCode(search.loc)
+    search.loc != null && isSupportedLocationCode(search.loc)
       ? search.loc
       : defaultLocationCode;
 
@@ -90,12 +91,12 @@ export function getDomainRouteState(
     tab: search.tab ?? "keywords",
     defaultLocationCode,
     locationCode: normalizedLocationCode,
-    // A non-Labs `loc` is dropped so the server uses the same default the
-    // location select shows.
-    sentLocationCode:
-      search.loc != null && isLabsLocationCode(search.loc)
+    // Only Labs locations are sent to the Labs-backed domain endpoints.
+    sentLocationCode: isLabsLocationCode(normalizedLocationCode)
+      ? search.loc != null && isLabsLocationCode(search.loc)
         ? search.loc
-        : undefined,
+        : undefined
+      : undefined,
     page: search.page != null && search.page > 0 ? search.page : 1,
     pageSize: search.size ?? DEFAULT_DOMAIN_KEYWORDS_PAGE_SIZE,
     appliedFilters: {

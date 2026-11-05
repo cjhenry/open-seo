@@ -8,13 +8,15 @@ type Input = {
   domain: string;
   scope: ResearchScope;
   locationCode: number | undefined;
+  /** False when the selected country is Google-Ads-only (not Labs). */
+  enabled?: boolean;
 };
 
 export function useDomainOverviewQuery(input: Input) {
   const trimmedDomain = input.domain.trim();
 
   return useQuery({
-    enabled: trimmedDomain !== "",
+    enabled: (input.enabled ?? true) && trimmedDomain !== "",
     queryKey: [
       "domain-overview",
       input.projectId,

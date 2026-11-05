@@ -2,6 +2,7 @@
 // provider (Labs vs Google Ads). This shim keeps existing client imports.
 export {
   DEFAULT_LOCATION_CODE,
+  LOCATION_OPTIONS,
   LABS_LOCATION_OPTIONS,
   LOCATIONS,
   getLanguageCode,

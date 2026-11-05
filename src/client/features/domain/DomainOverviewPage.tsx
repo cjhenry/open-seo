@@ -15,6 +15,7 @@ import {
 import {
   LOCATIONS,
   isLabsLocationCode,
+  isSupportedLocationCode,
 } from "@/client/features/keywords/locations";
 import { useDomainSearchHistory } from "@/client/hooks/useDomainSearchHistory";
 import type { DomainSearchHistoryItem } from "@/client/hooks/useDomainSearchHistory";
@@ -136,7 +137,7 @@ function getHistorySearchUpdate(
   defaultLocationCode: number,
 ): DomainSearchUpdate {
   const historyLocation =
-    item.locationCode != null && isLabsLocationCode(item.locationCode)
+    item.locationCode != null && isSupportedLocationCode(item.locationCode)
       ? item.locationCode
       : defaultLocationCode;
 
@@ -276,14 +277,19 @@ function useDomainOverviewState({
     [routeState.defaultLocationCode, setSearchParams],
   );
 
+  const labsLocation = isLabsLocationCode(routeState.locationCode);
   const overviewQuery = useDomainOverviewQuery({
     projectId,
     domain: routeState.domain,
     scope: routeState.scope,
     locationCode: routeState.sentLocationCode,
+    enabled: labsLocation,
   });
   const overview = overviewQuery.data ?? null;
-  const isLoading = routeState.domain.trim() !== "" && overviewQuery.isLoading;
+  const isLoading =
+    labsLocation &&
+    routeState.domain.trim() !== "" &&
+    overviewQuery.isLoading;
 
   const controlsForm = useForm({
     defaultValues: {
@@ -580,7 +586,20 @@ export function DomainOverviewPage({
           }
         />
 
-        {state.isLoading ? (
+        {!isLabsLocationCode(routeState.locationCode) ? (
+          <Alert variant="info">
+            <Info />
+            <AlertDescription className="text-foreground">
+              Domain Overview uses DataForSEO Labs, which does not cover{" "}
+              {LOCATIONS[routeState.locationCode] ?? "this country"}. Pick a
+              Labs-supported country to analyze a domain, or use Keyword
+              Research / Rank Tracking for Google Ads markets such as the Cayman
+              Islands.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {!isLabsLocationCode(routeState.locationCode) ? null : state.isLoading ? (
           <>
             {tabControls}
             <DomainOverviewLoadingState />

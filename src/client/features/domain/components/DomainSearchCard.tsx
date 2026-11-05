@@ -4,7 +4,7 @@ import { getFieldError } from "@/client/lib/forms";
 import type { DomainOverviewControlsForm } from "@/client/features/domain/DomainOverviewPage";
 import { toSortMode } from "@/client/features/domain/utils";
 import type { DomainSortMode } from "@/client/features/domain/types";
-import { LABS_LOCATION_OPTIONS } from "@/client/features/keywords/locations";
+import { LOCATION_OPTIONS } from "@/client/features/keywords/locations";
 import { LocationSelect } from "@/client/components/LocationSelect";
 import { ResearchScopeSelect } from "@/client/components/ResearchScopeSelect";
 import { SearchCard, SearchInput } from "@/client/components/SearchCard";
@@ -88,7 +88,7 @@ export function DomainSearchCard({
         {(field) => (
           <LocationSelect
             value={field.state.value}
-            options={LABS_LOCATION_OPTIONS}
+            options={LOCATION_OPTIONS}
             className="w-full lg:w-44 lg:shrink-0"
             onChange={(code) => {
               field.handleChange(code);

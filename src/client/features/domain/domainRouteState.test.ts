@@ -49,22 +49,32 @@ describe("getDomainRouteState", () => {
     },
   );
 
-  it("falls back to US for a Google-Ads-only project market", () => {
+  it("keeps a Google-Ads-only project market in the picker", () => {
     const state = getDomainRouteState(
       {},
       { locationCode: 2352, languageCode: "is" },
     );
 
-    expect(state.defaultLocationCode).toBe(2840);
-    expect(state.locationCode).toBe(2840);
+    expect(state.defaultLocationCode).toBe(2352);
+    expect(state.locationCode).toBe(2352);
+    // Ads-only markets are not sent to Labs-backed domain endpoints.
     expect(state.sentLocationCode).toBeUndefined();
   });
 
-  it("ignores a Google-Ads-only URL location", () => {
+  it("accepts a Google-Ads-only URL location without sending it to Labs", () => {
     const state = getDomainRouteState({ loc: 2352 }, project);
 
     expect(state.defaultLocationCode).toBe(2704);
-    expect(state.locationCode).toBe(2704);
+    expect(state.locationCode).toBe(2352);
+    expect(state.sentLocationCode).toBeUndefined();
+  });
+
+  it("keeps Cayman Islands selectable for an Ads-only project", () => {
+    const state = getDomainRouteState(
+      {},
+      { locationCode: 2136, languageCode: "en" },
+    );
+    expect(state.locationCode).toBe(2136);
     expect(state.sentLocationCode).toBeUndefined();
   });
 });
