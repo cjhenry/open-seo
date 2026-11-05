@@ -48,6 +48,34 @@ describe("runSelfhostPreflight", () => {
     expect(message).not.toContain("BETTER_AUTH_SECRET,");
   });
 
+  it("treats What's live as optional until both Postiz settings are present", () => {
+    expect(
+      itemFor(
+        runSelfhostPreflight({ AUTH_MODE: "local_noauth" }),
+        "What's live",
+      )?.level,
+    ).toBe("info");
+    expect(
+      itemFor(
+        runSelfhostPreflight({
+          AUTH_MODE: "local_noauth",
+          POSTIZ_API_URL: "https://social.example.test/api",
+        }),
+        "What's live",
+      )?.level,
+    ).toBe("warn");
+    expect(
+      itemFor(
+        runSelfhostPreflight({
+          AUTH_MODE: "local_noauth",
+          POSTIZ_API_URL: "https://social.example.test/api",
+          POSTIZ_WORK_API_KEY: "work-key",
+        }),
+        "What's live",
+      )?.level,
+    ).toBe("ok");
+  });
+
   it("warns that GSC stays disabled on a short BETTER_AUTH_SECRET", () => {
     const result = runSelfhostPreflight({
       AUTH_MODE: "local_noauth",

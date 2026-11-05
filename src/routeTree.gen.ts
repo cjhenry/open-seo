@@ -21,6 +21,7 @@ import { Route as Char91DotwellKnownChar93HttpMessageSignaturesDirectoryRouteImp
 import { Route as Char91DotwellKnownChar93OpenaiAppsChallengeRouteImport } from './routes/[.well-known]/openai-apps-challenge'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAiRouteImport } from './routes/_app/ai'
+import { Route as AppWhatsLiveRouteImport } from './routes/_app/whats-live'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
 import { Route as AppProjectsRouteImport } from './routes/_app/projects'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
@@ -140,6 +141,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAiRoute = AppAiRouteImport.update({
   id: '/ai',
   path: '/ai',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppWhatsLiveRoute = AppWhatsLiveRouteImport.update({
+  id: '/whats-live',
+  path: '/whats-live',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppBillingRoute = AppBillingRouteImport.update({
@@ -480,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/http-message-signatures-directory': typeof Char91DotwellKnownChar93HttpMessageSignaturesDirectoryRoute
   '/.well-known/openai-apps-challenge': typeof Char91DotwellKnownChar93OpenaiAppsChallengeRoute
   '/ai': typeof AppAiRoute
+  '/whats-live': typeof AppWhatsLiveRoute
   '/billing': typeof AppBillingRoute
   '/projects': typeof AppProjectsRoute
   '/settings': typeof AppSettingsRouteWithChildren
@@ -552,6 +559,7 @@ export interface FileRoutesByTo {
   '/.well-known/http-message-signatures-directory': typeof Char91DotwellKnownChar93HttpMessageSignaturesDirectoryRoute
   '/.well-known/openai-apps-challenge': typeof Char91DotwellKnownChar93OpenaiAppsChallengeRoute
   '/ai': typeof AppAiRoute
+  '/whats-live': typeof AppWhatsLiveRoute
   '/billing': typeof AppBillingRoute
   '/projects': typeof AppProjectsRoute
   '/support': typeof AppSupportRoute
@@ -621,6 +629,7 @@ export interface FileRoutesById {
   '/.well-known/http-message-signatures-directory': typeof Char91DotwellKnownChar93HttpMessageSignaturesDirectoryRoute
   '/.well-known/openai-apps-challenge': typeof Char91DotwellKnownChar93OpenaiAppsChallengeRoute
   '/_app/ai': typeof AppAiRoute
+  '/_app/whats-live': typeof AppWhatsLiveRoute
   '/_app/billing': typeof AppBillingRoute
   '/_app/projects': typeof AppProjectsRoute
   '/_app/settings': typeof AppSettingsRouteWithChildren
@@ -696,6 +705,7 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/.well-known/openai-apps-challenge'
     | '/ai'
+    | '/whats-live'
     | '/billing'
     | '/projects'
     | '/settings'
@@ -768,6 +778,7 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/.well-known/openai-apps-challenge'
     | '/ai'
+    | '/whats-live'
     | '/billing'
     | '/projects'
     | '/support'
@@ -836,6 +847,7 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/.well-known/openai-apps-challenge'
     | '/_app/ai'
+    | '/_app/whats-live'
     | '/_app/billing'
     | '/_app/projects'
     | '/_app/settings'
@@ -1013,6 +1025,13 @@ declare module '@tanstack/react-router' {
       path: '/ai'
       fullPath: '/ai'
       preLoaderRoute: typeof AppAiRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/whats-live': {
+      id: '/_app/whats-live'
+      path: '/whats-live'
+      fullPath: '/whats-live'
+      preLoaderRoute: typeof AppWhatsLiveRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/billing': {
@@ -1578,6 +1597,7 @@ const AppPProjectIdRouteRouteWithChildren =
 
 interface AppRouteRouteChildren {
   AppAiRoute: typeof AppAiRoute
+  AppWhatsLiveRoute: typeof AppWhatsLiveRoute
   AppBillingRoute: typeof AppBillingRoute
   AppProjectsRoute: typeof AppProjectsRoute
   AppSettingsRoute: typeof AppSettingsRouteWithChildren
@@ -1591,6 +1611,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAiRoute: AppAiRoute,
+  AppWhatsLiveRoute: AppWhatsLiveRoute,
   AppBillingRoute: AppBillingRoute,
   AppProjectsRoute: AppProjectsRoute,
   AppSettingsRoute: AppSettingsRouteWithChildren,

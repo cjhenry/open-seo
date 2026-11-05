@@ -131,6 +131,13 @@ declare namespace Cloudflare {
     OPENROUTER_BASE_URL?: string;
     // Optional OpenRouter model slug override (defaults in openrouter.ts).
     OPENROUTER_MODEL?: string;
+
+    // What's live calendar. POSTIZ_API_URL is the Postiz API root
+    // (https://host/api). POSTIZ_WORK_API_KEY is the existing Postiz work key.
+    POSTIZ_API_URL?: string;
+    POSTIZ_WORK_API_KEY?: string;
+    // When the work key is unset, "true" shows sample posts instead of an empty calendar.
+    POSTIZ_USE_FIXTURES?: string;
   }
 }
 

@@ -207,10 +207,12 @@ export function LighthouseIssueList({
   issues,
   isLoading,
   emptyMessage,
+  pageUrl,
 }: {
   issues: LighthouseIssue[];
   isLoading: boolean;
   emptyMessage?: string;
+  pageUrl: string;
 }) {
   if (isLoading) {
     return <SkeletonTableRows className="p-4" rows={5} columns={3} />;
@@ -241,6 +243,7 @@ export function LighthouseIssueList({
           <LighthouseIssueRow
             key={`${issue.category}-${issue.auditKey}-${issueIndex}`}
             issue={issue}
+            pageUrl={pageUrl}
           />
         ))}
       </TableBody>

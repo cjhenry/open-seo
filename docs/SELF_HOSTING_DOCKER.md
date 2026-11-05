@@ -69,6 +69,9 @@ docker compose up -d --force-recreate init web crawl-gateway
 | `CONTEXT_API_KEY`                          | Optional JavaScript rendering for site audits                                                                              |
 | `GOOGLE_MAPS_API_KEY`                      | Optional map for Local SEO; see [`GOOGLE_MAPS_SETUP.md`](./GOOGLE_MAPS_SETUP.md)                                           |
 | `CRAWLER_ACCESS_SECRET`                    | Optional, 32+ random characters; encrypts saved Shopify crawler signatures                                                 |
+| `POSTIZ_API_URL`, `POSTIZ_WORK_API_KEY`    | Optional What's live calendar of published Postiz posts                                                                    |
+
+What's live reads published posts from Postiz. `POSTIZ_API_URL` is the API root, for example `https://social.ict365.ky/api`. `POSTIZ_WORK_API_KEY` is the existing Postiz work key, the same value the Postiz CLI already uses. Do not create a second key. `POSTIZ_USE_FIXTURES=true` shows sample posts when that key is unset.
 
 For Google, register your own OAuth application with these redirect URLs under your public address: `/api/gsc/oauth/callback` for Search Console and `/api/ga4/oauth/callback` for Analytics. See [`SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md`](./SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md). Signing in with Google is not offered; accounts use email and password.
 

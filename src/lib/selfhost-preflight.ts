@@ -14,7 +14,14 @@ type PreflightLevel = "ok" | "info" | "warn" | "fail";
 
 type PreflightItem = {
   // Stable identifier shared with /api/health's check map.
-  key: "auth" | "dataforseo" | "gsc" | "ai" | "rendering" | "runtime";
+  key:
+    | "auth"
+    | "dataforseo"
+    | "gsc"
+    | "ai"
+    | "rendering"
+    | "postiz"
+    | "runtime";
   name: string;
   level: PreflightLevel;
   message: string;
@@ -209,6 +216,37 @@ function checkDataForSeo(env: EnvRecord, items: PreflightItem[]): void {
   });
 }
 
+function checkPostiz(env: EnvRecord, items: PreflightItem[]): void {
+  const url = get(env, "POSTIZ_API_URL");
+  const key = get(env, "POSTIZ_WORK_API_KEY");
+  if (!url && !key) {
+    items.push({
+      key: "postiz",
+      name: "What's live",
+      level: "info",
+      message:
+        "Not configured (optional). Set POSTIZ_API_URL and POSTIZ_WORK_API_KEY to show published Postiz posts. POSTIZ_WORK_API_KEY is the existing Postiz work key. See docs/SELF_HOSTING_DOCKER.md.",
+    });
+    return;
+  }
+  if (!url || !key) {
+    items.push({
+      key: "postiz",
+      name: "What's live",
+      level: "warn",
+      message:
+        "Set both POSTIZ_API_URL and POSTIZ_WORK_API_KEY. The key is the existing Postiz work key, not a new one.",
+    });
+    return;
+  }
+  items.push({
+    key: "postiz",
+    name: "What's live",
+    level: "ok",
+    message: "POSTIZ_API_URL and POSTIZ_WORK_API_KEY set",
+  });
+}
+
 function checkOptionalFeatures(env: EnvRecord, items: PreflightItem[]): void {
   const clientId = get(env, "GOOGLE_CLIENT_ID");
   const clientSecret = get(env, "GOOGLE_CLIENT_SECRET");
@@ -258,6 +296,8 @@ function checkOptionalFeatures(env: EnvRecord, items: PreflightItem[]): void {
         "Not configured (optional). See docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md.",
     });
   }
+
+  checkPostiz(env, items);
 
   items.push(
     get(env, "AUTH_MODE") === "everyapp"
